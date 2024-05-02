@@ -12,9 +12,9 @@ uint8_t delayMult = 1;
  1 - O protótipo da função de uma tarefa deve sempre retornar void, ou seja, a tarefa não possui retorno.
  2 - A função de uma tarefa deve receber um parâmetro de ponteiro void. 
 */
-void vTask1(void *pvParameters);
-void vTask2(void *pvParameters);
-void vTask3(void *pvParameters);
+void vTask1_guinada(void *pvParameters);
+void vTask2_arfagem(void *pvParameters);
+void vTask3_rolagem(void *pvParameters);
 void vTask4_prints(void *pvParameters);
 
 /*
@@ -22,9 +22,9 @@ void vTask4_prints(void *pvParameters);
 */
 
 // definição da task1 (guinada)
-void vTask1(void *pvParameters)
+void vTask1_guinada(void *pvParameters)
 {
-    // comparador que vai ser utilizado para a guinada 
+    // Mascara utilizada para checagem do estado da ação (no caso, Guinada)
     const uint8_t isHorario = 0b001;
     
     // Recebe o parametro da função como um inteiro de 64 bits (exageiro demais)
@@ -35,7 +35,7 @@ void vTask1(void *pvParameters)
     {
         vPrintString("Guinada\n");
 
-        // verifica se isHorario esta settado, caso não esteja, é anti-horario
+        // verifica se isHorario está de acordo com a máscara, e sim, é Guinada em sentido horario, caso contrario, anti-horario
         if(isHorario&param){
             driver_0++;
             driver_1--;
@@ -57,7 +57,7 @@ void vTask1(void *pvParameters)
 }
 
 // mesma coisa da vTask1
-void vTask2(void* pvParameters)
+void vTask2_arfagem(void* pvParameters)
 {
     const uint8_t isFront = 0b010;
     uint64_t param = (uint64_t) pvParameters;
@@ -82,7 +82,7 @@ void vTask2(void* pvParameters)
 }
 
 // mesma coisa da vTask1
-void vTask3(void* pvParameters)
+void vTask3_rolagem(void* pvParameters)
 {
     const uint8_t isLeft = 0b100;
     uint64_t param = (uint64_t) pvParameters;
@@ -116,7 +116,6 @@ void vTask4_prints(void *pvParameters){
         printf("drive_3:[%"PRId32"]\n\n", driver_3);
 
         // faz parse do parametro para um unsigned int de 64 bits, inverte os bits dele e da parte para um pointeiro para void, e modifica o valor do ponteiro usado para passar o parametro
-        pvParameters = (void*) ~(uint64_t)pvParameters;
         vTaskDelay(10*delayMult);
     }
     vTaskDelete(NULL);
@@ -124,11 +123,13 @@ void vTask4_prints(void *pvParameters){
 
 int main_(void)
 {
-    uint8_t orientacao_manobras = 0b111;
-	xTaskCreate(vTask1, "Guinada", 1000, (void*)orientacao_manobras, 1, NULL);
-	xTaskCreate(vTask2, "Arfagem", 1000, (void*)orientacao_manobras, 1, NULL);
-	xTaskCreate(vTask3, "Rolagem", 1000, (void*)orientacao_manobras, 1, NULL);
+    // gostaria que as orientações estivessem em um uint8_t, mas não tem muito o que fazer com ponteiro de void
+    uint64_t orientacao_manobras = 0b011;
+	xTaskCreate(vTask1_guinada, "Guinada", 1000, (void*)orientacao_manobras, 1, NULL);
+	xTaskCreate(vTask2_arfagem, "Arfagem", 1000, (void*)orientacao_manobras, 1, NULL);
+	xTaskCreate(vTask3_rolagem, "Rolagem", 1000, (void*)orientacao_manobras, 1, NULL);
 	xTaskCreate(vTask4_prints, "Prints", 1000, (void*)orientacao_manobras, 1, NULL);
+    
 
 	// Inicia o escalonador de tarefas
 	vTaskStartScheduler();
